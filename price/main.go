@@ -3,7 +3,7 @@ package main
 import (
 	"google.golang.org/grpc"
 	"log"
-	priceService "microservice-test/price/price"
+	"microservice-test/price/service"
 	"microservice-test/proto/price"
 	"net"
 	"os"
@@ -20,7 +20,9 @@ func main() {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 
-	price.RegisterPriceServiceServer(grpcServer, &priceService.Service{})
+	priceService := service.New()
+
+	price.RegisterPriceServiceServer(grpcServer, priceService)
 
 	go func() {
 		log.Println("Server Price is listening on port: 10000")

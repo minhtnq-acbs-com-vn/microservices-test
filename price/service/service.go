@@ -1,4 +1,4 @@
-package price
+package service
 
 import (
 	"context"
@@ -12,6 +12,10 @@ const specialDay = 20
 
 type Service struct {
 	price.UnimplementedPriceServiceServer
+}
+
+func New() *Service {
+	return &Service{}
 }
 
 func (ps *Service) GetPrice(ctx context.Context, in *price.PriceRequest) (*price.PriceResponse, error) {
