@@ -19,6 +19,7 @@ func New() *Service {
 }
 
 func (ps *Service) GetPrice(ctx context.Context, in *price.PriceRequest) (*price.PriceResponse, error) {
+	fmt.Println("[RPC] GetPrice Called With Request ", in)
 	date := in.Date
 	if len(date) == 0 {
 		return nil, errorx.Wrap(errorx.New("Date can't be empty"), fmt.Sprintf("[RPC] GetPrice ValidateAll Failed %v", date))
@@ -38,6 +39,7 @@ func (ps *Service) GetPrice(ctx context.Context, in *price.PriceRequest) (*price
 		Date:  date,
 		Price: priceForTheDay,
 	}
+	fmt.Println("[RPC] GetPrice Response ", res)
 
 	return res, nil
 }

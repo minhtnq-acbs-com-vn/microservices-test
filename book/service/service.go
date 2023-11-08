@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/gookit/goutil/errorx"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	helperClient "microservice-test/book/client"
 	"microservice-test/book/db"
 	"microservice-test/proto/book"
 )
@@ -18,6 +20,7 @@ func New(connectionString string) *Service {
 }
 
 func (s *Service) SaveBooking(ctx context.Context, req *book.BookRequest) (*book.BookResponse, error) {
+	fmt.Println("[RPC] SaveBooking Called with req: ", req)
 	client, err := db.New(s.ConnectionString)
 	if err != nil {
 		return nil, errorx.Wrap(err, "[RPC] SaveBooking New DB Failed")
@@ -28,9 +31,11 @@ func (s *Service) SaveBooking(ctx context.Context, req *book.BookRequest) (*book
 	}
 	req.Id = result.InsertedID.(primitive.ObjectID).Hex()
 
-	res := &book.BookResponse{
-		Request:    req,
-		HelperName: result.InsertedID.(primitive.ObjectID).Hex(),
+	res, err := helperClient.CallHelperToUpdate(req)
+	if err != nil {
+		return nil, errorx.Wrap(err, "[RPC] SaveBooking CallHelperToUpdate Failed")
 	}
+	fmt.Println("[RPC] SaveBooking Called with res: ", res)
+
 	return res, nil
 }

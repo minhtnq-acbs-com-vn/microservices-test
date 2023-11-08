@@ -24,6 +24,7 @@ func New(connectionString string) *Service {
 }
 
 func (s *Service) UpdateJob(ctx context.Context, req *book.BookRequest) (*book.BookResponse, error) {
+	fmt.Println("[RPC] UpdateJob Called With Request ", req)
 	client, err := db.New(s.ConnectionString)
 	if err != nil {
 		return nil, errorx.Wrap(err, fmt.Sprintf("[DB] Connect Failed %v", err))
@@ -64,6 +65,8 @@ func (s *Service) UpdateJob(ctx context.Context, req *book.BookRequest) (*book.B
 		Request:    req,
 		HelperName: randomHelper,
 	}
+	fmt.Println("[RPC] UpdateJob Response ", res)
+
 	return res, nil
 }
 
@@ -73,10 +76,9 @@ func SetupFakeData(helperCollection *mongo.Collection) error {
 		bson.D{{"name", "Helper 2"}, {"phone", 1}},
 		bson.D{{"name", "Helper 3"}, {"phone", 2}},
 	}
-	results, err := helperCollection.InsertMany(context.Background(), helperData)
+	_, err := helperCollection.InsertMany(context.Background(), helperData)
 	if err != nil {
 		return errorx.Wrap(err, "[RPC] SetupFakeData InsertFakeData Failed")
 	}
-	fmt.Println(results.InsertedIDs)
 	return nil
 }
