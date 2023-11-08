@@ -1,0 +1,51 @@
+version: '3'
+services:
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    networks:
+      - microservices-net
+
+  price-service:
+    build:
+      context: ./
+      dockerfile: ./price/Dockerfile
+    depends_on:
+      - mongodb
+    ports:
+      - "10000:10000"
+    volumes:
+      - ./proto:/go/src/microservices-test/proto
+    networks:
+      - microservices-net
+
+  helper-service:
+    build:
+      context: ./
+      dockerfile: ./helper/Dockerfile
+    depends_on:
+      - mongodb
+    ports:
+      - "12000:12000"
+    volumes:
+      - ./proto:/go/src/microservices-test/proto
+    networks:
+      - microservices-net
+
+  book-service:
+    build:
+      context: ./
+      dockerfile: ./book/Dockerfile
+    depends_on:
+      - mongodb
+      - helper-service
+    ports:
+      - "11000:11000"
+    volumes:
+      - ./proto:/go/src/microservices-test/proto
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:

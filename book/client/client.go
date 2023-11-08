@@ -10,7 +10,7 @@ import (
 	"microservice-test/proto/helper"
 )
 
-const helperConnectionString = "localhost:12000"
+const helperConnectionString = "host.docker.internal:12000"
 
 func CallHelperToUpdate(req *book.BookRequest) (*book.BookResponse, error) {
 	fmt.Println("[CLIENT] calling helper to update job with request: ", req)

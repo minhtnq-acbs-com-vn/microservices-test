@@ -11,7 +11,7 @@ import (
 	"syscall"
 )
 
-const connectionString = "mongodb://localhost:27017"
+const connectionString = "mongodb://host.docker.internal:27017"
 
 func main() {
 	lis, err := net.Listen("tcp", ":11000")
