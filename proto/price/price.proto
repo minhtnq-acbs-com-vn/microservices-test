@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "/price";
+
+package price;
+
+service PriceService {
+  rpc GetPrice(PriceRequest) returns (PriceResponse);
+}
+
+message PriceRequest {
+  string date = 1;
+}
+
+message PriceResponse {
+  string date = 1;
+  int64 price = 2;
+}
