@@ -8,11 +8,13 @@
 
 - Price service is on port 10000
 - Book service is on port 11000
+- Helper service is on port 12000
 - This application doesn't have multiple layers like controller, service, repository, etc. because it's easier to review
-  this way.
+  this way, I think.
 
 # LIMITATION
 
-- Can't properly return error message
+- Don't have a fallback, circuit breaker, retry, etc. because I don't know how to implement it
 - Can't exclude proto files from coverage
-- Booking Service don't have high test coverage because I don't know how to replicate bad cases like database error
+- Booking Service and Helper Service don't have high test coverage because I don't know how to replicate bad cases like
+  database error

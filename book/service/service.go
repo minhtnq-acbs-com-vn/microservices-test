@@ -18,10 +18,6 @@ func New(connectionString string) *Service {
 }
 
 func (s *Service) SaveBooking(ctx context.Context, req *book.BookRequest) (*book.BookResponse, error) {
-	if len(req.Helper) > 0 {
-		return nil, errorx.Wrap(errorx.New("Helper must be empty"), "[RPC] SaveBooking Validate Failed")
-	}
-
 	client, err := db.New(s.ConnectionString)
 	if err != nil {
 		return nil, errorx.Wrap(err, "[RPC] SaveBooking New DB Failed")
@@ -30,10 +26,11 @@ func (s *Service) SaveBooking(ctx context.Context, req *book.BookRequest) (*book
 	if err != nil {
 		return nil, errorx.Wrap(err, "[RPC] SaveBooking InsertOne Failed")
 	}
+	req.Id = result.InsertedID.(primitive.ObjectID).Hex()
 
 	res := &book.BookResponse{
-		Id:     result.InsertedID.(primitive.ObjectID).Hex(),
-		Status: "success",
+		Request:    req,
+		HelperName: result.InsertedID.(primitive.ObjectID).Hex(),
 	}
 	return res, nil
 }

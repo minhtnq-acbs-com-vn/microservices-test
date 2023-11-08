@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "/price";
+option go_package = "microservice-test/proto/price";
 
 package price;
 

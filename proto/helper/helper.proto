@@ -1,0 +1,10 @@
+syntax = "proto3";
+import "proto/book/book.proto";
+
+option go_package = "microservice-test/proto/helper";
+
+package helper;
+
+service Helper {
+  rpc UpdateJob(book.BookRequest) returns (book.BookResponse);
+}

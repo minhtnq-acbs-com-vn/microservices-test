@@ -1,4 +1,4 @@
-package service_test
+package db
 
 import (
 	"context"
@@ -6,20 +6,15 @@ import (
 	"github.com/gookit/goutil/testutil/assert"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"microservice-test/book/service"
-	"microservice-test/proto/book"
 	"os"
 	"testing"
 )
 
 var dbClient *mongo.Client
 var connectionString string
-var bookService *service.Service
 
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")
@@ -35,7 +30,6 @@ func TestMain(m *testing.M) {
 	// pull mongodb docker image for version 5.0
 	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "mongo",
-		Tag:        "latest",
 		Env: []string{
 			// username and password for mongodb superuser
 			"MONGO_INITDB_ROOT_USERNAME=root",
@@ -73,8 +67,6 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	bookService = service.New(connectionString)
-
 	// run tests
 	code := m.Run()
 
@@ -91,26 +83,8 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestSaveBooking(t *testing.T) {
-	req := &book.BookRequest{
-		From: "customer",
-		Desc: "clean",
-	}
-	res, err := bookService.SaveBooking(context.Background(), req)
-
+func TestConnection(t *testing.T) {
+	client, err := New(connectionString)
+	assert.NotNil(t, client)
 	assert.Nil(t, err)
-	assert.Equal(t, res.Request.From, req.From)
-	assert.Equal(t, res.Request.Desc, req.Desc)
-
-	objectId, err := primitive.ObjectIDFromHex(res.Request.Id)
-	assert.Nil(t, err)
-	assert.NotEmpty(t, objectId)
-
-	// check if data is saved in mongodb
-	collection := dbClient.Database("book").Collection("book")
-	var result book.BookRequest
-	err = collection.FindOne(context.Background(), bson.M{"_id": objectId}).Decode(&result)
-	assert.Nil(t, err)
-	assert.Equal(t, result.From, req.From)
-	assert.Equal(t, result.Desc, req.Desc)
 }

@@ -7,19 +7,19 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"microservice-test/book/service"
+	"microservice-test/helper/service"
 	"microservice-test/proto/book"
+
 	"os"
 	"testing"
 )
 
 var dbClient *mongo.Client
 var connectionString string
-var bookService *service.Service
+var helperService *service.Service
 
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")
@@ -73,7 +73,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	bookService = service.New(connectionString)
+	helperService = service.New(connectionString)
 
 	// run tests
 	code := m.Run()
@@ -91,26 +91,40 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestSaveBooking(t *testing.T) {
+func TestUpdateJob(t *testing.T) {
+	ctx := context.Background()
+	testID := "654ba8776019d804e35d0d71"
 	req := &book.BookRequest{
+		Id:   testID,
 		From: "customer",
 		Desc: "clean",
 	}
-	res, err := bookService.SaveBooking(context.Background(), req)
-
+	res, err := helperService.UpdateJob(ctx, req)
 	assert.Nil(t, err)
 	assert.Equal(t, res.Request.From, req.From)
 	assert.Equal(t, res.Request.Desc, req.Desc)
+	assert.Equal(t, res.Request.Id, testID)
+	assert.NotEmpty(t, res.HelperName)
+}
 
-	objectId, err := primitive.ObjectIDFromHex(res.Request.Id)
-	assert.Nil(t, err)
-	assert.NotEmpty(t, objectId)
+func TestUpdateJobInvalidID(t *testing.T) {
+	ctx := context.Background()
+	req := &book.BookRequest{
+		Id:   "invalid",
+		From: "customer",
+		Desc: "clean",
+	}
+	res, err := helperService.UpdateJob(ctx, req)
+	assert.NotNil(t, err)
+	assert.Nil(t, res)
+}
 
-	// check if data is saved in mongodb
-	collection := dbClient.Database("book").Collection("book")
-	var result book.BookRequest
-	err = collection.FindOne(context.Background(), bson.M{"_id": objectId}).Decode(&result)
+func TestSetupFakeData(t *testing.T) {
+	helperCollection := dbClient.Database("helper").Collection("helper")
+	err := service.SetupFakeData(helperCollection)
 	assert.Nil(t, err)
-	assert.Equal(t, result.From, req.From)
-	assert.Equal(t, result.Desc, req.Desc)
+
+	numDocs, err := helperCollection.CountDocuments(context.Background(), bson.M{})
+	assert.Nil(t, err)
+	assert.Equal(t, numDocs, int64(3))
 }

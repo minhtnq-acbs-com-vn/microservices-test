@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "/book";
+option go_package = "microservice-test/proto/book";
 
 package book;
 
@@ -9,12 +9,12 @@ service BookService {
 }
 
 message BookRequest {
-  string from = 1;
-  string helper = 2;
+  string id = 1;
+  string from = 2;
   string desc = 3;
 }
 
 message BookResponse{
-  string id = 1;
-  string status = 2;
+  BookRequest request = 1;
+  string helper_name = 2;
 }
