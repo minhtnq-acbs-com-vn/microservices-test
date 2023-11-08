@@ -10,9 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
 	"log"
 	"microservice-test/book/service"
+	helperService "microservice-test/helper/service"
 	"microservice-test/proto/book"
+	"microservice-test/proto/helper"
+	"net"
 	"os"
 	"testing"
 )
@@ -36,11 +40,6 @@ func TestMain(m *testing.M) {
 	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "mongo",
 		Tag:        "latest",
-		Env: []string{
-			// username and password for mongodb superuser
-			"MONGO_INITDB_ROOT_USERNAME=root",
-			"MONGO_INITDB_ROOT_PASSWORD=password",
-		},
 	}, func(config *docker.HostConfig) {
 		// set AutoRemove to true so that stopped container goes away by itself
 		config.AutoRemove = true
@@ -52,7 +51,8 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not start resource: %s", err)
 	}
 
-	connectionString = fmt.Sprintf("mongodb://root:password@localhost:%s", resource.GetPort("27017/tcp"))
+	connectionString = fmt.Sprintf("mongodb://localhost:%s", resource.GetPort("27017/tcp"))
+	StartHelperServiceForTesting()
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	err = pool.Retry(func() error {
@@ -113,4 +113,25 @@ func TestSaveBooking(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, result.From, req.From)
 	assert.Equal(t, result.Desc, req.Desc)
+}
+
+func StartHelperServiceForTesting() {
+	lis, err := net.Listen("tcp", ":12000")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	var opts []grpc.ServerOption
+	grpcServer := grpc.NewServer(opts...)
+
+	helperS := helperService.New(connectionString)
+
+	helper.RegisterHelperServer(grpcServer, helperS)
+
+	go func() {
+		log.Println("Server Helper is listening on port: 12000")
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+	}()
 }
