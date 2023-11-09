@@ -12,7 +12,7 @@
 
 # NOTE
 
-- Price service is on port 10000
+- Price service is on port 10000 and also the special day is 20 which have higher price than other days
 - Book service is on port 11000
 - Helper service is on port 12000
 - All proto files are in the proto folder which is located in the root project directory
